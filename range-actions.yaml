@@ -70,19 +70,16 @@ blueprint:
           fields:
             name:
               label: Range Name
-              description: Friendly name used in templates and notifications when this range is entered.
               required: true
               selector:
                 text: {}
             description:
               label: Description
-              description: Optional details about the range purpose. Exposed as template variable when entered.
               required: false
               selector:
                 text: {}
             min:
               label: Minimum Value
-              description: Inclusive lower bound for this range.
               required: true
               selector:
                 number:
@@ -92,7 +89,6 @@ blueprint:
                   mode: box
             max:
               label: Maximum Value
-              description: Inclusive upper bound for this range.
               required: true
               selector:
                 number:
