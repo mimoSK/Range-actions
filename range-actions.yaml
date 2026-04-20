@@ -23,13 +23,24 @@ blueprint:
     **Inputs:**
     - **Numeric Entity**: The sensor or number entity whose state is monitored.
     - **Monitored Ranges**: Ordered range definitions with name, optional description, minimum, and maximum values.
+    - **Remembered Range Helper**: `input_number` helper that keeps the last entered range index to support deadband or hysteresis behavior.
     - **Additional Conditions (Optional)**: Extra conditions that must pass before actions run.
     - **On Range Entered**: Actions executed when a new range is entered.
+
+    **Create The Helper:**
+    - Go to `Settings -> Devices & Services -> Helpers`.
+    - Create a `Number` helper.
+    - Set minimum to `-1`.
+    - Set maximum to at least `number_of_ranges - 1`.
+    - Set step to `1`.
+    - Set the initial value to `-1`.
+    - Select this helper as `Remembered Range Helper` when creating the automation.
 
     **How Range Matching Works:**
     - Ranges are inclusive (`min <= value <= max`).
     - Overlapping ranges are allowed, but order determines the active range.
     - Invalid range bounds are skipped during evaluation.
+    - The remembered range helper keeps the last entered range active across unmatched gaps until another valid range is entered.
 
     <details>
     <summary><b>Automation Process</b></summary>
@@ -96,6 +107,18 @@ blueprint:
                   max: 1000000000
                   step: any
                   mode: box
+    remembered_range_helper:
+      name: Remembered Range Helper
+      description: >-
+        Input_number helper that stores the last entered range index. Use this
+        to keep the previous range active across deadband gaps and
+        avoid repeated triggers when the value fluctuates near a threshold.
+        Configure the helper with a minimum of -1 and a maximum high enough for
+        your number of ranges.
+      selector:
+        entity:
+          filter:
+            - domain: input_number
     additional_conditions:
       name: Additional Conditions
       description: Optional extra conditions that must pass before the entry actions run.
@@ -110,6 +133,7 @@ blueprint:
         {{ monitored_entity }} - Entity ID of the monitored entity\n
         {{ previous_value }} - Previous numeric value of the monitored entity (or null if unavailable)\n
         {{ current_value }} - Current numeric value of the monitored entity (or null if unavailable)\n
+        {{ remembered_range_index }} - Latched range index from helper (or -1 if none)\n
         {{ previous_range_index }} - Index of the previously active range (or -1 if none)\n
         {{ current_range_index }} - Index of the currently active range (or -1 if none)\n
         {{ entered_range_index }} - Index of the newly entered range (or -1 if none)\n
@@ -125,6 +149,7 @@ blueprint:
 variables:
   monitored_entity: !input numeric_entity
   configured_ranges: !input ranges
+  remembered_range_helper_entity: !input remembered_range_helper
   previous_value: >-
     {% if trigger.from_state is not none %}
       {{ trigger.from_state.state | float(none) }}
@@ -169,9 +194,11 @@ variables:
       {% endfor %}
     {% endif %}
     {{ ns.index }}
+  remembered_range_index: >-
+    {{ states(remembered_range_helper_entity) | int(-1) }}
   current_range_index: "{{ entered_range_index | int(-1) }}"
   range_was_entered: >-
-    {{ entered_range_index | int(-1) >= 0 and entered_range_index | int(-1) != previous_range_index | int(-1) }}
+    {{ entered_range_index | int(-1) >= 0 and entered_range_index | int(-1) != remembered_range_index | int(-1) }}
   entered_range_name: >-
     {% set idx = entered_range_index | int(-1) %}
     {% if idx >= 0 and idx < (configured_ranges | count) %}
@@ -210,9 +237,15 @@ condition:
     value_template: "{{ current_value is number }}"
   - condition: template
     value_template: "{{ range_was_entered }}"
+
+action:
+  - action: input_number.set_value
+    target:
+      entity_id: !input remembered_range_helper
+    data:
+      value: "{{ current_range_index | int(-1) }}"
   - condition: and
     conditions: !input additional_conditions
-
-action: !input entered_range_actions
+  - sequence: !input entered_range_actions
 
 mode: queued
