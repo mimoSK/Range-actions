@@ -3,6 +3,8 @@ blueprint:
   description: |
     # Range Actions  
     **Version: 1.0**
+
+    Source: https://github.com/mimoSK/Range-actions
     
     Range Actions is a Home Assistant automation blueprint for
     value-band based automations.
