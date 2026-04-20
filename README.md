@@ -3,6 +3,8 @@
 Numeric Range Entry Actions is a Home Assistant automation blueprint that watches one numeric entity and runs actions when the value enters a configured range.
 It is designed for threshold-based automations where you need predictable first-match range behavior and clear context variables for notifications, logging, or control logic.
 
+[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FmimoSK%2FRange-actions%2Frefs%2Fheads%2Fmain%2Frange-actions.yaml)
+
 ## What This Blueprint Does
 
 - Monitors one numeric entity (`sensor`, `input_number`, or `number`).
@@ -75,7 +77,14 @@ ranges:
 
 ## Importing The Blueprint
 
+### Option 1: Use "Import blueprint" badge
+
+1. Click on "Import blueprint" badge which is at the top of this document.
+2. Follow the import instructions.
+
+### Option 2: Local file import
+
 1. Copy `range-actions.yaml` to your Home Assistant blueprints path, for example:
 	 - `config/blueprints/automation/<your_namespace>/range-actions.yaml`
-2. Restart or Quick reload Home Assistant.
-3. Create a new automation from this blueprint.
+2. Reload automations/blueprints from Home Assistant.
+3. Create an automation from this blueprint.
