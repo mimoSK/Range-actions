@@ -59,10 +59,8 @@ It is designed for threshold-based automations where you need predictable first-
 ## Available Templates In Actions
 
 - `{{ monitored_entity }}`: Entity ID being monitored.
-- `{{ previous_value }}`: Previous numeric value (or `none`).
 - `{{ current_value }}`: Current numeric value (or `none`).
 - `{{ remembered_range_index }}`: Latched range index stored in the helper (or `-1`).
-- `{{ previous_range_index }}`: Previous matching range index (or `-1`).
 - `{{ current_range_index }}`: Current matching range index (or `-1`).
 - `{{ entered_range_index }}`: Entered range index (or `-1`).
 - `{{ entered_range_name }}`: Name of entered range.
@@ -78,6 +76,7 @@ It is designed for threshold-based automations where you need predictable first-
 - Invalid ranges are ignored during evaluation (invalid bound values or `min > max`).
 - The remembered range helper is updated before optional additional conditions are evaluated.
 - Because of that, the current range remains remembered even when additional conditions block the action.
+- Entry detection compares the current matching range to `remembered_range_index`, not to the trigger's previous state.
 - This makes it possible to create deadbands between ranges without retriggering repeatedly while the value fluctuates around a threshold.
 - The automation uses `mode: queued` so quick successive entries are processed in order.
 

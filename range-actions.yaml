@@ -46,9 +46,9 @@ blueprint:
     <summary><b>Automation Process</b></summary>
 
     - On every state change of the monitored entity:
-      - Previous and current values are parsed.
-      - Previous range and current range are resolved.
-      - Entry is detected when current range and differs from previous.
+      - Current value is parsed.
+      - Current range is resolved.
+      - Entry is detected when current range differs from the remembered range.
 
     - Actions run only when:
       - Current value is numeric,
@@ -131,10 +131,8 @@ blueprint:
         "Actions to run when the monitored entity enters a configured range.\n
         Available variables:\n
         {{ monitored_entity }} - Entity ID of the monitored entity\n
-        {{ previous_value }} - Previous numeric value of the monitored entity (or null if unavailable)\n
         {{ current_value }} - Current numeric value of the monitored entity (or null if unavailable)\n
         {{ remembered_range_index }} - Latched range index from helper (or -1 if none)\n
-        {{ previous_range_index }} - Index of the previously active range (or -1 if none)\n
         {{ current_range_index }} - Index of the currently active range (or -1 if none)\n
         {{ entered_range_index }} - Index of the newly entered range (or -1 if none)\n
         {{ entered_range_name }} - Name of the newly entered range\n
@@ -150,34 +148,12 @@ variables:
   monitored_entity: !input numeric_entity
   configured_ranges: !input ranges
   remembered_range_helper_entity: !input remembered_range_helper
-  previous_value: >-
-    {% if trigger.from_state is not none %}
-      {{ trigger.from_state.state | float(none) }}
-    {% else %}
-      {{ none }}
-    {% endif %}
   current_value: >-
     {% if trigger.to_state is not none %}
       {{ trigger.to_state.state | float(none) }}
     {% else %}
       {{ none }}
     {% endif %}
-  previous_range_index: >-
-    {% set value = trigger.from_state.state | float(none) if trigger.from_state is not none else none %}
-    {% set ns = namespace(index=-1) %}
-    {% if value is number %}
-      {% for item in configured_ranges %}
-        {% set range_min = item.min | float(none) %}
-        {% set range_max = item.max | float(none) %}
-        {% set is_first_match = ns.index == -1 %}
-        {% set has_valid_bounds = range_min is number and range_max is number and range_min <= range_max %}
-        {% set is_in_range = value >= range_min and value <= range_max if has_valid_bounds else false %}
-        {% if is_first_match and has_valid_bounds and is_in_range %}
-          {% set ns.index = loop.index0 %}
-        {% endif %}
-      {% endfor %}
-    {% endif %}
-    {{ ns.index }}
   entered_range_index: >-
     {% set value = trigger.to_state.state | float(none) if trigger.to_state is not none else none %}
     {% set ns = namespace(index=-1) %}
