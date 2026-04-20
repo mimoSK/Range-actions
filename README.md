@@ -98,6 +98,73 @@ ranges:
 		max: 100
 ```
 
+<details>
+<summary><b>Example Automation: CO2 Guard Example</b></summary>
+
+```yaml
+alias: CO2 guard
+description: >-
+	Sends CO2 level notifications based on entered ranges while using deadband gaps
+	and a remembered range helper to reduce repeated edge-trigger spam.
+use_blueprint:
+	path: mimoSK/range-actions.yaml
+	input:
+		numeric_entity: input_number.test_sensor_value
+		ranges:
+			- name: All clear
+				description: All Clear. No action needed.
+				min: 0
+				max: 1350
+			- min: 1500
+				max: 1900
+				name: Slightly Elevated
+				description: >-
+					CO2 level is above 1500ppm. Ventilation recommended. May cause
+					drowsiness or reduced focus.
+			- min: 2000
+				max: 2900
+				name: Moderately High
+				description: >-
+					CO2 level is above 2000ppm. Increase ventilation. May cause headaches
+					or mild sleepiness.
+			- min: 3000
+				max: 3900
+				name: High Levels
+				description: >-
+					CO2 level is above 3000ppm. Ventilate now! May cause increased
+					sleepiness or poor concentration.
+			- name: Very High Levels
+				description: >-
+					CO2 level is above 4000ppm. Increase ventilation urgently! May cause
+					stronger headaches or cognitive impairment.
+				min: 4000
+				max: 4900
+			- name: Critical Levels
+				description: >-
+					CO2 level is above 5000ppm. Increase ventilation immediately! May
+					cause nausea, dizziness, or breathing issues.
+				min: 5000
+				max: 999999
+		additional_conditions:
+			- condition: template
+				value_template: >-
+					{% set co2_normal = current_range_index == 0 %}  {% set
+					range_increased = current_range_index > remembered_range_index %} {% if
+					range_increased or co2_normal %}
+						true
+					{% else %}
+						false
+					{% endif %}
+		entered_range_actions:
+			- action: notify.<add your device>
+				metadata: {}
+				data:
+					title: "CO2: {{ entered_range_name }}"
+					message: "{{ entered_range_description }}"
+		remembered_range_helper: input_number.co2_guard_range_helper
+```
+</details>
+
 ## Importing The Blueprint
 
 ### Option 1: Use "Import blueprint" badge
